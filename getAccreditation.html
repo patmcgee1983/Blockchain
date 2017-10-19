@@ -1,72 +1,24 @@
-<!--
-
-James Miller / Pat McGee
-
-Allows user to enter a contract's address, ABI, and a wallet address
-will check if the wallet specified has a token specified by the contract.
-
-current path of execution: browser uses web3.js to call on infura, which reads
-from the blockchain.
-
-Current issues:
-uses infura over katipult's node?
-how generalizeable are the ABI's? could one map to many/all accredditation tokens?
-  EDIT: generalizable enough that kamkoinABI and patABI give the same result
-  EDIT EDIT: Now I'm really confused. I left the ABI blank and it still worked.
-  EDIT EDIT EDIT: NEVERMIND THE OTHER EDITS I MESSED UP IT'S FIXED NOW
-  EDIT EDIT EDIT EDIT: nevermind again, the first edit still applies, but the second doesn't
-ABI will NEED a balanceOf method, since I'm statically calling it here. re-work that?
-ctrl+f codeIssue#1- specific to KamloopsKoin?
-  EDIT: Unfounded? doesn't have an impact on reading Pattonians
-errors are only in console if invalid input entered
-no input validation aka pretty awful error handling
-More trailing zeros than anticipated on balance
-
-TODO:
-Pull kamKoinABI and patABI into separate (JSON) files, call when/if needed
-Pull out some functions into their own files
-put this up on github
-Less hard-coded data
-Very low priority: if the smart contract has a 'symbol()' method returning the
-  token's symbol, it  can then be read by web3
-css magic so that the output box is visible w/o scrolling
-  div to separate the 3 input things
-Jquery-ify?
-
-Learn more about ABI: it doesn't seem to matter if KamloopsKoin or Pattonian's
-ABI is selected, either will give the same result for the same other addresses.
-
-I expect some JSON-magic could be used so that a 'user' of this wouldn't need to
-specify the ABI for non-user defined contracts. e.g KamloopsKoin.json contains
-KamloopsKoin's contract address as well as the contract ABI in some form.
-
-Additionally, I noticed that on etherscan there's an option to view a smart contract's ABI.
-This option doesn't seem to work for either KamloopsKoin or Patonians, but if we could figure
-out how/why, then I believe we'd be able to read a contract's ABI from the blockchain,
-which simplifies expanding this to a variety of smart contracts and their tokens immensely.
--->
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>PoC: Check a wallet's contents</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+    <title>Check Accreditation</title>
   <script src="http://rawgit.com/ethereum/web3.js/0.16.0/dist/web3.min.js"></script>
+  <script src="accreditationData.js"></script>
   <script>
-//These ABI's are up here so that they don't alter the indentation flow
-//of when they're actually needed
-  var kamKoinABI = [ { "constant": true, "inputs": [], "name": "name", "outputs": [ { "name": "", "type": "string", "value": "KamloopsKoin" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "approve", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [], "name": "totalSupply", "outputs": [ { "name": "", "type": "uint256", "value": "4.2e+24" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_from", "type": "address" }, { "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "transferFrom", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [], "name": "decimals", "outputs": [ { "name": "", "type": "uint8", "value": "18" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_value", "type": "uint256" } ], "name": "burn", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [ { "name": "", "type": "address" } ], "name": "balanceOf", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_from", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "burnFrom", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [], "name": "symbol", "outputs": [ { "name": "", "type": "string", "value": "KK" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "transfer", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": false, "inputs": [ { "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" }, { "name": "_extraData", "type": "bytes" } ], "name": "approveAndCall", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [ { "name": "", "type": "address" }, { "name": "", "type": "address" } ], "name": "allowance", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "inputs": [ { "name": "initialSupply", "type": "uint256", "index": 0, "typeShort": "uint", "bits": "256", "displayName": "initial Supply", "template": "elements_input_uint", "value": "4200000" }, { "name": "tokenName", "type": "string", "index": 1, "typeShort": "string", "bits": "", "displayName": "token Name", "template": "elements_input_string", "value": "KamloopsKoin" }, { "name": "tokenSymbol", "type": "string", "index": 2, "typeShort": "string", "bits": "", "displayName": "token Symbol", "template": "elements_input_string", "value": "KK" } ], "payable": false, "stateMutability": "nonpayable", "type": "constructor" }, { "anonymous": false, "inputs": [ { "indexed": true, "name": "from", "type": "address" }, { "indexed": true, "name": "to", "type": "address" }, { "indexed": false, "name": "value", "type": "uint256" } ], "name": "Transfer", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "name": "from", "type": "address" }, { "indexed": false, "name": "value", "type": "uint256" } ], "name": "Burn", "type": "event" } ];
 
-  var patABI = [ { "constant": true, "inputs": [], "name": "name", "outputs": [ { "name": "", "type": "string", "value": "Pattonian" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "approve", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [], "name": "totalSupply", "outputs": [ { "name": "", "type": "uint256", "value": "1000000" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_from", "type": "address" }, { "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "transferFrom", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [], "name": "decimals", "outputs": [ { "name": "", "type": "uint8", "value": "2" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_value", "type": "uint256" } ], "name": "burn", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [ { "name": "", "type": "address" } ], "name": "balanceOf", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_from", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "burnFrom", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [], "name": "symbol", "outputs": [ { "name": "", "type": "string", "value": "¶" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" } ], "name": "transfer", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": false, "inputs": [ { "name": "_spender", "type": "address" }, { "name": "_value", "type": "uint256" }, { "name": "_extraData", "type": "bytes" } ], "name": "approveAndCall", "outputs": [ { "name": "success", "type": "bool" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [ { "name": "", "type": "address" }, { "name": "", "type": "address" } ], "name": "allowance", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "inputs": [ { "name": "initialSupply", "type": "uint256", "index": 0, "typeShort": "uint", "bits": "256", "displayName": "initial Supply", "template": "elements_input_uint", "value": "10000" }, { "name": "tokenName", "type": "string", "index": 1, "typeShort": "string", "bits": "", "displayName": "token Name", "template": "elements_input_string", "value": "Pattonian" }, { "name": "tokenSymbol", "type": "string", "index": 2, "typeShort": "string", "bits": "", "displayName": "token Symbol", "template": "elements_input_string", "value": "¶" } ], "payable": false, "stateMutability": "nonpayable", "type": "constructor" }, { "anonymous": false, "inputs": [ { "indexed": true, "name": "from", "type": "address" }, { "indexed": true, "name": "to", "type": "address" }, { "indexed": false, "name": "value", "type": "uint256" } ], "name": "Transfer", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "name": "from", "type": "address" }, { "indexed": false, "name": "value", "type": "uint256" } ], "name": "Burn", "type": "event" } ];
+  // James Miller & Pat McGee
+  
+  // We are hardcoding all the contracts we are checking for in parallel arrays
+  // The script will cycle through all the contracts with the users wallet, and checking
+  // if any of that token exists in the users wallet.
+  // If 1 or more of the token does exist in the users wallet, they are considered "accredited" for that token name
 
   window.onload = function() {//I don't remember what the best practise for doing this is. This works...
-    document.getElementById("userContractSubmitButton").addEventListener("click", userEntersContractAddress);
-    document.getElementById("userWalletSubmitButton").addEventListener("click", userEntersWalletAddress);
-    document.getElementById("userABISubmitButton").addEventListener("click", userEntersABI);
-    document.getElementById("checkContents").addEventListener("click", check);
+    document.getElementById("checkAccreditationsButton").addEventListener("click", checkAccreditations);
+
   };
-  var contract;//contract address, easy to access as a global
-  var wallet;//wallet address, easy to access as a global
-  var abi;//abi, easy to access as a global
 
   if (typeof web3 !== 'undefined') {
   web3 = new Web3(web3.currentProvider);
@@ -79,264 +31,45 @@ which simplifies expanding this to a variety of smart contracts and their tokens
     //Pretty sure this is Pat's infura token
   }
 
-  function userEntry(enterElem, outElem)//Is this overkill?
+
+  function checkAccreditations()
   {
-    var input = document.getElementById(enterElem).value;
-    var editOption = document.getElementById(outElem);
-    editOption.value = input;
-    editOption.selected = "selected";
-    editOption.text = input;
-  }
+    returnValue = "<h2>You are accredited for the following tokens:</h2>"
 
-  function userEntersContractAddress()
-  {
-    userEntry("userEntersContractAddress", "userEnteredContractAddress");
-  }
+    wallet = document.getElementById("walletId").value
 
-  function userEntersABI()
-  {
-    var edit = userEntry("userEntersABI", "userEnteredABI");
-    document.getElementById("userEnteredABI").text = "Entered ABI";
-    //ABI too long to leave in select box
-  }
+    // Loop through array items
+    for (i=0; i<tokenName.length; i++)
+    {
+      var _contract = web3.eth.contract(ABI[i]);
+      var instance = _contract.at(tokenAddress[i]);
+      var contents = instance.balanceOf(wallet);
+      balance = contents['c']
+      console.log("Balance of "+ tokenName[i] + ": " + balance)
+      if (balance >0)
+        returnValue += "<p>"+tokenName[i]+"</p>";
+    }
 
-  function userEntersWalletAddress()
-  {
-    userEntry("userEntersWalletAddress", "userEnteredWalletAddress");
-  }
-
-/*
-  function userEntersContractAddress()
-  {
-    var input = document.getElementById("userEntersContractAddress").value;
-    var editOption = document.getElementById("userEnteredContractAddress");
-    editOption.value = input;
-    editOption.text = input;
-    editOption.selected = "selected";
-  }
-
-  function userEntersABI()
-  {
-    var input = document.getElementById("userEntersABI").value;
-    var editOption = document.getElementById("userEnteredABI");
-    editOption.value = input;
-    editOption.text = "ABI entered.";
-    editOption.selected = "selected";
-  }
-
-  function userEntersWalletAddress()
-  {
-    var input = document.getElementById("userEntersWalletAddress").value;
-    var editOption = document.getElementById("userEnteredWalletAddress");
-    editOption.value = input;
-    editOption.text = input;
-    editOption.selected = "selected";
-  }
-  */
-  function selected(chosen) // This may be overkill
-  {
-    var selected = document.getElementById(chosen);
-    var out = selected.options[selected.selectedIndex].value;
-    return out;
-  }
-
-  function selectedContract()
-  {
-    var out = selected("contractAddress");
-
-    document.getElementById("_selectedContract").innerHTML = out;
-    contract = out;
-  }
-
-  function selectedABI()
-  {
-    var out = selected("ABI");
-
-    if(out == "kamKoinABI")
-      out = kamKoinABI;
-    else if(out == "patABI")
-      out = patABI;
-
-      abi = out;
-  }
-
-  function selectedWallet()
-  {
-    var out = selected("walletAddress");
-
-    document.getElementById("_selectedWallet").innerHTML = out;
-    wallet = out;
-  }
-
-/*
-  function selectedContract()
-  {
-    var selected = document.getElementById("contractAddress");
-    var out = selected.options[selected.selectedIndex].value;
-
-    document.getElementById("_selectedContract").innerHTML = out;
-    contract = out;
-  }
-
-  function selectedABI()
-  {
-    var selected = document.getElementById("ABI");
-    var out = selected.options[selected.selectedIndex].value;
-
-    if(out = "kamKoinABI")
-      out = kamKoinABI;
-    else if(out = "patABI")
-      out = patABI;
-
-      abi = out;
-  }
-
-  function selectedWallet()
-  {
-    var selected = document.getElementById("walletAddress");
-    var out = selected.options[selected.selectedIndex].value;
-
-    document.getElementById("_selectedWallet").innerHTML = out;
-    wallet = out;
-  }
-  */
-
-  function check()
-  {
-    var present = false;
-    var colour;
-    selectedContract();
-    selectedABI();
-    selectedWallet();
-
-    var _contract = web3.eth.contract(abi);
-    var instance = _contract.at(contract);
-    var contents = instance.balanceOf(wallet);
-console.log(contents);
-    var balance = contents['c'];//codeIssue#1
-    //Why 'c'? Don't fully understand.
-    //if one looks at the returned object from instance.balanceOf(wallet),
-    //it looks like an associative array.
-    //'c' was keyed to the balance in question.
-    //at least, it was for KamloopsKoin... it might be something else entirely for other contracts or ABI's...
-    //this might break for other contracts
-    //works for Pattonians though, so maybe it's generalized already?
-    // ¯\_(ツ)_/¯
-    if(balance > 0)
-          present = true;
-
-    if(present)
-      colour = "green"
-    else
-      colour = "red"
-console.log(abi);
-    document.getElementById("output").style.color = colour; //screw the american spelling
-    document.getElementById("answer").innerHTML = present + ". Balance: " + balance + " " + instance.symbol();
+    document.getElementById("accreditations").innerHTML = returnValue
   }
 
   </script>
 </head>
-
 <body>
-  <h2> Check Wallet for Token </h2>
-  <br>
+  <div id="main" class="container">
+  <h1>Check Accreditation Tokens of a Wallet</h1>
 
+  <div id="" style="border: 1px solid gray; border-radius: 8px; width: 80%">
   <p>
-    Token Contract address
-  </p>
-
-    <select name="contractAddress" id="contractAddress" size="3">
-
-      <option id="KamloopsKoin" value ="0x180616ebb0357fC4E838e29d9e91eeA7A6117AC0"  selected="selected">
-        KamloopsKoin
-      </option>
-      <option id="Pattonians" value ="0xABA8a6a941826451256fb9A11b7559D45C1995f6">
-        Pattonians
-      </option>
-      <option id="userEnteredContractAddress" value="_userEnteredContractAddress">
-        ENTER_CONTRACT_ADDRESS_BELOW
-      </option>
-
-    </select>
-
-    <br>
     <form>
-      <input type="text" id="userEntersContractAddress">
-      <input type="button" id="userContractSubmitButton" value="Submit">
+      Enter Wallet ID:
+      <input type="text" size="100" id="walletId" class="form-control input-lg">
+      <button type="button" class="btn btn-success" id="checkAccreditationsButton">Check Accreditation</button>
     </form>
-
-    <br>
-    <p>
-      ABI of specified contract
-    </p>
-
-    <select name="ABI" id="ABI" size="3">
-      <option id="kamKoinABI" value="kamKoinABI" selected="selected">
-        KamloopsKoin ABI
-      </option>
-      <option id="patABI" value ="patABI">
-        Pattonian ABI
-      </option>
-      <option id="userEnteredABI" value="_userEnteredWalletAddress">
-        ENTER_NEW_CONTRACT'S_ABI_BELOW
-      </option>
-
-    </select>
-
-    <br>
-    <form>
-      <input type="text" id="userEntersABI">
-      <input type="button" id="userABISubmitButton" value ="submit">
-    </form>
-
-    <br>
-    <p>
-      Wallet address to check for above token
-    </p>
-
-    <select name="walletAddress" id="walletAddress" size="5">
-
-      <option id="James" value="0xBe205d2f458F2b9645486eECe137790F8dB3e960" selected="selected">
-        James
-      </option>
-      <option id="Pat" value="0x9E50Da989fD91b983Ef603E16f85310707D3338F">
-        Pat
-      </option>
-      <option id="Doug" value="0x927C844FE1035Da0e2031850eca48Ac5C3a4bD6d">
-        Doug
-      </option>
-      <option id="Test" value="0xB2891D5526b446b65D6cf9dd3ef08cB9687dfd13">
-        Test empty wallet. Expect a 'false' response
-      </option>
-      <option id="userEnteredWalletAddress" value="_userEnteredWalletAddress">
-        ENTER_WALLET_ADDRESS_BELOW
-      </option>
-
-    </select>
-
-    <br>
-    <form>
-      <input type="text" id="userEntersWalletAddress">
-      <input type="button" id="userWalletSubmitButton" value="Submit">
-    </form>
-    <p>
-      0x57992E321fEB5E788615901F98Dd3c094d5BD52d has 42 KamloopsKoin, for test purposes
-      <br>
-      Try entering it!
-    </p>
-
-
-<br><br>
-
-  <div id="output" style="border-style:dotted">
-    <button type="button" id="checkContents">Check wallet for contract's tokens</button>
-    <p>
-      Address of selected contract: <p id="_selectedContract"></p>
-    </p>
-    <p>
-      Address of selected wallet: <p id="_selectedWallet"></p>
-    </p>
-    <p>
-      Wallet specified owns tokens from specified contract: <p id="answer"></p>
-    </p>
   </div>
+    <div id="accreditations" style="border: 0px solid gray; border-radius: 8px; width: 80%">
+    </div>
+  </p>
+</div>
+</body>
+</html>
